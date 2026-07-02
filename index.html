@@ -169,6 +169,96 @@
     <div id="yonetimGirisFormu" style="text-align: left; background: #f5f2eb; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
         <h4 style="margin: 0 0 15px 0; color: #3e4a3d; font-size: 15px; text-align: center; font-weight: bold;">🔒 Yönetim Girişi</h4>
         
-        <input type="text" id="panelKu
+        <input type="text" id="panelKullanici" placeholder="Kullanıcı Adı" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 13px;">
+        <input type="password" id="panelSifre" placeholder="Şifre" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 13px;">
+        
+        <button onclick="yonetimGirisYap()" style="background: #2e4d36; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 14px; transition: 0.3s;">Sadece Yönetim</button>
+    </div>
+
+    <div id="gizliYorumlarAlani" style="display: none; text-align: left; margin-top: 20px; max-height: 350px; overflow-y: auto; padding: 15px; background: #fff; border: 2px solid #2e4d36; border-radius: 10px;">
+        <h4 style="color: #2e4d36; margin-top: 0; border-bottom: 2px solid #2e4d36; padding-bottom: 5px; font-weight: bold;">Gelen Görüşler (Yönetici Özel)</h4>
+        <div id="yorumListesi" style="font-size: 13px; color: #333; line-height: 1.4;"></div>
+        <button onclick="verileriTemizle()" style="background: #d32f2f; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 15px; font-weight: bold;">Tüm Mesajları Temizle/Sil</button>
+    </div>
+</div>
+
+<script>
+    // GİRİŞ BİLGİLERİNİZ (Buradan değiştirebilirsiniz)
+    const ADMIN_USER = "admin";
+    const ADMIN_PASS = "Lithos2026";
+
+    const form = document.getElementById('yerelDilekFormu');
+    const basari = document.getElementById('yerelBasari');
+
+    // Ziyaretçinin mesaj gönderme fonksiyonu
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const adSoyad = document.getElementById('gorusAdSoyad').value;
+        const mesaj = document.getElementById('gorusMesaj').value;
+        const tarih = new Date().toLocaleString('tr-TR');
+
+        let mevcutYorumlar = JSON.parse(localStorage.getItem('otelGorusleri')) || [];
+        mevcutYorumlar.push({ ad: adSoyad, msg: mesaj, date: tarih });
+        
+        localStorage.setItem('otelGorusleri', JSON.stringify(mevcutYorumlar));
+
+        form.style.display = 'none';
+        basari.style.display = 'block';
+        
+        // Form alanlarını temizle
+        document.getElementById('gorusAdSoyad').value = "";
+        document.getElementById('gorusMesaj').value = "";
+    });
+
+    // Yönetim Giriş Fonksiyonu
+    function yonetimGirisYap() {
+        const girilenUser = document.getElementById('panelKullanici').value;
+        const girilenPass = document.getElementById('panelSifre').value;
+        
+        if (girilenUser === ADMIN_USER && girilenPass === ADMIN_PASS) {
+            const alan = document.getElementById('gizliYorumlarAlani');
+            const liste = document.getElementById('yorumListesi');
+            let mevcutYorumlar = JSON.parse(localStorage.getItem('otelGorusleri')) || [];
+            
+            liste.innerHTML = "";
+            
+            if (mevcutYorumlar.length === 0) {
+                liste.innerHTML = "<p style='color:#999; text-align:center;'>Henüz iletilmiş bir görüş bulunmuyor.</p>";
+            } else {
+                // En son gelen mesaj en üstte görünsün diye listeyi ters çeviriyoruz
+                mevcutYorumlar.slice().reverse().forEach(function(item) {
+                    liste.innerHTML += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px 0; margin-bottom: 5px;">
+                            <span style="color:#666; font-size:11px; float:right;">${item.date}</span>
+                            <strong style="color:#2e4d36;">Gönderen:</strong> ${item.ad}<br>
+                            <strong style="color:#2e4d36;">Mesaj:</strong> ${item.msg}
+                        </div>
+                    `;
+                });
+            }
+            
+            alan.style.display = 'block';
+            // Giriş alanlarını temizle
+            document.getElementById('panelKullanici').value = "";
+            document.getElementById('panelSifre').value = "";
+            alert("Yönetici girişi başarılı. Görüşler aşağıda listelendi.");
+            
+            // Görüşler alanına otomatik kaydırır
+            alan.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert("Hatalı Kullanıcı Adı veya Şifre! Erişim Reddedildi.");
+        }
+    }
+
+    // Mesajları Tamamen Silme Fonksiyonu
+    function verileriTemizle() {
+        if (confirm("Gelen tüm mesajları kalıcı olarak silmek istediğinize emin miydiniz? Bu işlem geri alınamaz.")) {
+            localStorage.removeItem('otelGorusleri');
+            document.getElementById('gizliYorumlarAlani').style.display = 'none';
+            alert("Tüm veritabanı temizlendi.");
+        }
+    }
+</script>
 </body>
 </html>
